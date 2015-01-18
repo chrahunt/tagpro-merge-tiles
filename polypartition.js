@@ -292,7 +292,7 @@ define(function() {
 
   Partition.prototype.isConvex = function(p1, p2, p3) {
     var tmp = (p3.y - p1.y) * (p2.x - p1.x) - (p3.x - p1.x) * (p2.y - p1.y);
-    return (tmp > 0);
+    return (tmp >= 0);
   }
 
   Partition.prototype.isReflex = function(p1, p2, p3) {
@@ -323,47 +323,9 @@ define(function() {
   // Takes a polygon outline and an array of polygons defining holes.
   // Poly vertices must be in CW order, holes in CCW order. This can be
   // done using setOrientation.
-  Partition.prototype.convexPartition = function(poly, holes) {
+  Partition.prototype.convexPartition = function(triangles) {
     var i11, i12, i13, i21, i22, i23;
     var parts = new Array();
-
-    // Check if poly is convex only if there are no holes.
-    if (!holes) {
-      var reflex = false;
-      // Check if already convex.
-      for (var i = 0; i < poly.numpoints; i++) {
-        var prev = poly.getPrevI(i);
-        var next = poly.getNextI(i);
-        if (this.isReflex(poly.getPoint(prev), poly.getPoint(i), poly.getPoint(next))) {
-          reflex = true;
-          break;
-        }
-      }
-      if (!reflex) {
-        parts.push(poly);
-        return parts;
-      }
-    }
-
-    // Turn holes into arrays of poly2tri Points.
-    holes = holes.map(function(poly) {
-      return poly.points.map(function(p) {
-        return new poly2tri.Point(p.x, p.y);
-      });
-    });
-
-    // Do the same for the outline.
-    var contour = poly.points.map(function(p) {
-      return new poly2tri.Point(p.x, p.y);
-    });
-
-    var swctx = new poly2tri.SweepContext(contour);
-    var triangles = swctx.addHoles(holes).triangulate().getTriangles();
-    
-    // Convert poly2tri triangles back into polygons and filter out the small ones.
-    triangles = this.convertTrianglesToPolys(triangles).filter(function(poly) {
-      return poly.getArea() > 5;
-    });
 
     for (var s1 = 0; s1 < triangles.length; s1++) {
       var poly1 = triangles[s1];
@@ -437,7 +399,7 @@ define(function() {
 
   PolyUtils.isConvex = function(p1, p2, p3) {
     var tmp = (p3.y - p1.y) * (p2.x - p1.x) - (p3.x - p1.x) * (p2.y - p1.y);
-    return (tmp > 0);
+    return (tmp >= 0);
   }
 
   /**

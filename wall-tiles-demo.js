@@ -112,11 +112,13 @@ function( pp,              tile_grids) {
       if (Math.floor(tile) == 1) {
         tilePolys = tilePolys.concat(getWallPoly(tile, xi, yi));
       }
-    })
-  })
+    });
+  });
+  var partitioner = new Partition();
+  var mergedPolys = partitioner.convexPartition(tilePolys);
   
   // Initialize canvas.
   var canvas = initCanvasForTiles(tiles);
 
-  drawPolys(tilePolys, canvas);
+  drawPolys(mergedPolys, canvas);
 });
