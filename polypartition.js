@@ -67,20 +67,6 @@ define(function() {
     return Math.sqrt(diff.dot(diff));
   }
 
-  // Given another point, returns the squared distance to that point.
-  Point.prototype.dist2 = function(p) {
-    var diff = this.sub(p);
-    return diff.dot(diff);
-  }
-
-  /**
-   * Returns true if the point is (0, 0).
-   * @return {boolean} - Whether or not the point is (0, 0).
-   */
-  Point.prototype.zero = function() {
-    return this.x == 0 && this.y == 0;
-  }
-
   Point.prototype.len = function() {
     return this.dist(new Point(0, 0));
   }
@@ -91,39 +77,7 @@ define(function() {
     return new Point(0, 0);
   }
 
-  Point.prototype.toString = function() {
-    return 'x' + this.x + 'y' + this.y;
-  }
-
-  //// EDGE ////
-  // Edges are used to represent the border between two adjacent
-  // polygons.
-  Edge = function(p1, p2) {
-    this.p1 = p1;
-    this.p2 = p2;
-    this.center = p1.add(p2.sub(p1).div(2));
-    this.points = [this.p1, this.center, this.p2];
-  }
-  exports.Edge = Edge;
-
-  Edge.prototype._CCW = function(p1, p2, p3) {
-    a = p1.x; b = p1.y;
-    c = p2.x; d = p2.y;
-    e = p3.x; f = p3.y;
-    return (f - b) * (c - a) > (d - b) * (e - a);
-  }
-
-  // from http://stackoverflow.com/a/16725715
-  Edge.prototype.intersects = function(edge) {
-    var q1 = edge.p1, q2 = edge.p2;
-    if (q1.eq(this.p1) || q1.eq(this.p2) || q2.eq(this.p1) || q2.eq(this.p2)) return false;
-    return (this._CCW(this.p1, q1, q2) != this._CCW(this.p2, q1, q2)) && (this._CCW(this.p1, this.p2, q1) != this._CCW(this.p1, this.p2, q2));
-  }
-
-
-  //// POLY ////
   Poly = function() {
-    this.hole = false;
     this.points = null;
     this.numpoints = 0;
   }
@@ -203,127 +157,19 @@ define(function() {
     this.points = newpoints;
   }
 
-  Poly.prototype.getCenter = function() {
-    var x = this.points.map(function(p) { return p.x });
-    var y = this.points.map(function(p) { return p.y });
-    var minX = Math.min.apply(null, x);
-    var maxX = Math.max.apply(null, x);
-    var minY = Math.min.apply(null, y);
-    var maxY = Math.max.apply(null, y);
-    return new Point((minX + maxX)/2, (minY + maxY)/2);
-  }
-
-  // Adapted from http://stackoverflow.com/a/16283349
-  Poly.prototype.centroid = function() {
-    var x = 0,
-        y = 0,
-        i,
-        j,
-        f,
-        point1,
-        point2;
-
-    for (i = 0, j = this.points.length - 1; i < this.points.length; j = i, i += 1) {
-      point1 = this.points[i];
-      point2 = this.points[j];
-      f = point1.x * point2.y - point2.x * point1.y;
-      x += (point1.x + point2.x) * f;
-      y += (point1.y + point2.y) * f;
-    }
-
-    f = this.getArea() * 3;
-    x = Math.abs(x);
-    y = Math.abs(y);
-    return new Point(x / f, y / f);
-  }
-
-  // Print list of points. csep is coordinate separator, psep is point
-  // separator, default is space and newline, respectively.
-  Poly.prototype.toPointString = function(csep, psep) {
-    csep = csep || ' ';
-    psep = psep || '\n';
-    var out = "";
-    this.points.forEach(function(p) {
-      out = out + p.x + csep + p.y + psep;
-    });
-    return out;
-  }
-
-  Poly.prototype.toString = function() {
-    var center = this.centroid();
-    return "" + center.x + " " + center.y;
-  }
-
-  /**
-   * Checks if the given point is contained within the Polygon.
-   * Adapted from http://stackoverflow.com/a/8721483
-   *
-   * @param {Point} p - The point to check.
-   * @return {boolean} - Whether or not the point is contained within
-   *   the polygon.
-   */
-  Poly.prototype.containsPoint = function(p) {
-    var result = false;
-    for (var i = 0, j = this.numpoints - 1; i < this.numpoints; j = i++) {
-      var p1 = this.points[j], p2 = this.points[i];
-      if ((p2.y > p.y) != (p1.y > p.y) &&
-          (p.x < (p1.x - p2.x) * (p.y - p2.y) / (p1.y - p2.y) + p2.x)) {
-        result = !result;
-      }
-    }
-    return result;
-  }
-
-  PVertex = function() {
-    this.active = false;
-    this.convex = false;
-    this.ear = false;
-    this.next = null;
-    this.prev = null;
-    this.angle = 0;
-    this.p = null;
-  };
-
-  //// PARTITION ////
-  Partition = function() {
-    this.drawCallback = null;
-  };
+  Partition = {};
   exports.Partition = Partition;
 
-  Partition.prototype.isConvex = function(p1, p2, p3) {
+  Partition.isConvex = function(p1, p2, p3) {
     var tmp = (p3.y - p1.y) * (p2.x - p1.x) - (p3.x - p1.x) * (p2.y - p1.y);
     return (tmp >= 0);
-  }
-
-  Partition.prototype.isReflex = function(p1, p2, p3) {
-    return !this.isConvex(p1, p2, p3);
-  }
-
-  Partition.prototype.normalize = function(p) {
-    var n = Math.sqrt(p.dot(p));
-    if (n !== 0)
-      return p.div(n);
-    else
-      return new Point(0, 0);
-  }
-
-  Partition.prototype.convertTrianglesToPolys = function(triangles) {
-    var polys = triangles.map(function(triangle) {
-      var poly = new Poly();
-      poly.init(3);
-      triangle.getPoints().forEach(function(p, i) {
-        poly.setPoint(i, new Point(p.x, p.y));
-      });
-      return poly;
-    });
-    return polys;
   }
 
   // Using Hertel-Mehlhorn
   // Takes a polygon outline and an array of polygons defining holes.
   // Poly vertices must be in CW order, holes in CCW order. This can be
   // done using setOrientation.
-  Partition.prototype.convexPartition = function(triangles) {
+  Partition.convexPartition = function(triangles) {
     var i11, i12, i13, i21, i22, i23;
     var parts = new Array();
 
@@ -395,32 +241,5 @@ define(function() {
     return triangles;
   }
 
-  var PolyUtils = {};
-
-  PolyUtils.isConvex = function(p1, p2, p3) {
-    var tmp = (p3.y - p1.y) * (p2.x - p1.x) - (p3.x - p1.x) * (p2.y - p1.y);
-    return (tmp >= 0);
-  }
-
-  /**
-   * Given an array of polygons, returns the one that contains the point.
-   * If no polygon is found, null is returned.
-   * @param {Point} p - The point to find the polygon for.
-   * @param {Array.<Poly>} polys - The polygons to search for the point.
-   * @return {?Polygon} - The polygon containing the point.
-   */
-  PolyUtils.findPolyForPoint = function(p, polys) {
-    var i, poly;
-    for (i in polys) {
-      poly = polys[i];
-      if (poly.containsPoint(p)) {
-        return poly;
-      }
-    }
-    return null;
-  }
-  exports.PolyUtils = PolyUtils;
-
   return exports;
 });
-

@@ -4,24 +4,6 @@ function( pp,              tile_grids) {
   Poly = pp.Poly;
   Partition = pp.Partition;
 
-  function drawPath(pathInfo, canvas) {
-    var context = canvas.getContext('2d');
-    context.beginPath();
-    var start = pathInfo.shift();
-    context.moveTo(start.x, start.y);
-    for (var i = 0; i < pathInfo.length; i++) {
-      context.lineTo(pathInfo[i].x, pathInfo[i].y);
-    }
-    //context.lineTo(start.x, start.y);
-    context.lineWidth = 1;
-    context.strokeStyle = 'blue';
-    context.stroke();
-    context.closePath();
-    pathInfo.forEach(function(p) {
-      drawPoint(p, canvas);
-    });
-  }
-
   // Takes in a polygon, canvas element, and [optional] color string.
   function drawPoly(poly, canvas, color) {
     if (typeof color == 'undefined') color = 'black';
@@ -114,8 +96,8 @@ function( pp,              tile_grids) {
       }
     });
   });
-  var partitioner = new Partition();
-  var mergedPolys = partitioner.convexPartition(tilePolys);
+
+  var mergedPolys = Partition.convexPartition(tilePolys);
   
   // Initialize canvas.
   var canvas = initCanvasForTiles(tiles);
