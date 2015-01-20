@@ -77,9 +77,17 @@ define(function() {
     return new Point(0, 0);
   }
 
-  Poly = function() {
-    this.points = null;
-    this.numpoints = 0;
+  /**
+   * May take an arbitrary number of points as arguments.
+   */
+  Poly = function(points) {
+    if (points) {
+      this.points = points.slice();
+      this.numpoints = this.points.length;
+    } else {
+      this.points = null;
+      this.numpoints = 0;
+    }
   }
   exports.Poly = Poly;
 
@@ -170,6 +178,11 @@ define(function() {
   // Poly vertices must be in CW order, holes in CCW order. This can be
   // done using setOrientation.
   Partition.convexPartition = function(triangles) {
+    // Copy triangles to preserve the originals.
+    triangles = triangles.map(function(triangle) {
+      return new Poly(triangle.points);
+    });
+    
     var i11, i12, i13, i21, i22, i23;
     var parts = new Array();
 

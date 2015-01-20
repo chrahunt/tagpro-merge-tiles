@@ -4,6 +4,20 @@
   </head>
   <body>
     <p>Merging wall tiles.</p>
+    <div id="actions">
+      <label for="maps">Maps</label>
+      <select name="maps" id="maps"></select><br>
+      <p>Display type</p>
+      <label>
+        <input type="radio" name="grid" value="tiles" checked>Tiles
+      </label>
+      <label>
+        <input type="radio" name="grid" value="triangles">Triangles
+      </label>
+      <label>
+        <input type="radio" name="grid" value="merged">Merged
+      </label>
+    </div>
     <canvas id="c"></canvas>
     <script data-main="wall-tiles-demo.js" src="require.js"></script>
   </body>
